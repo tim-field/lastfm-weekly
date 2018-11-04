@@ -1,0 +1,17 @@
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 9
+  },
+  "env": {
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "rules": {
+    "linebreak-style": ["error", "unix"],
+    "no-param-reassign": ["error", { "props": false }],
+    "semi": ["error", "never"],
+    "no-console": "off"
+  }
+}

@@ -1,14 +1,12 @@
-require('dotenv').config()
+require("dotenv").config()
 const fetch = require("node-fetch")
 const differenceInWeeks = require("date-fns/difference_in_weeks")
 const addWeeks = require("date-fns/add_weeks")
-const parse = require("date-fns/parse")
 const format = require("date-fns/format")
-const R = require("ramda")
 
-const joel = "thom_dork"
-const stateDate = "2018-09-01"
-const {API_KEY} = process.env
+// const joel = "thom_dork"
+// const stateDate = "2018-09-01"
+const { API_KEY } = process.env
 
 function getStats(user, from, to) {
   const timeFrom = convertToTimestamp(from)
@@ -18,8 +16,8 @@ function getStats(user, from, to) {
   ).then(res => res.json())
 }
 
-async function getAlbums(from, to) {
-  let res = await getStats(joel, from, to)
+async function getAlbums(user, from, to) {
+  let res = await getStats(user, from, to)
   return res.weeklyalbumchart.album
     .map(album => {
       return {
@@ -35,15 +33,8 @@ function niceDate(date) {
   return format(date, "YYYY-MM-DD")
 }
 
-async function printAlbums(from, to) {
-  let albums = await getAlbums(from, to)
-  albums.map(album =>
-    console.log(`"${album.name}", ${album.count}, ${niceDate(from)}`)
-  )
-}
-
-function getTotalWeeks(to = new Date()) {
-  return differenceInWeeks(to, stateDate)
+function getTotalWeeks(from, to = new Date()) {
+  return differenceInWeeks(to, from)
 }
 
 function convertToTimestamp(date) {
@@ -51,7 +42,7 @@ function convertToTimestamp(date) {
 }
 
 function eachWeek(since) {
-  const totalWeeks = [...Array(getTotalWeeks()).keys()]
+  const totalWeeks = [...Array(getTotalWeeks(since)).keys()]
   const result = totalWeeks.map(weekNumber => {
     return addWeeks(since, weekNumber)
   })
@@ -69,26 +60,26 @@ function eachWeek(since) {
   return pairs
 }
 
-async function getAllAlbums(since) {
+async function getAllAlbums(user, since) {
   const weeks = await Promise.all(
     eachWeek(since).map(([from, to]) => {
-      return getAlbums(from, to)
+      return getAlbums(user, from, to)
     })
   )
   return weeks.reduce((flat, week) => flat.concat(week), [])
 }
 
 function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+  var letters = "0123456789ABCDEF"
+  var color = "#"
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)]
   }
+  return color
+}
 
-async function graphConfig() {
-  const allAlbums = await getAllAlbums(stateDate)
+async function getGraphData(user, startDate) {
+  const allAlbums = await getAllAlbums(user, startDate)
 
   const weeks = allAlbums.reduce((weeks, album) => {
     if (weeks.includes(album.week)) {
@@ -103,7 +94,6 @@ async function graphConfig() {
     }
     return names.concat(album.name)
   }, [])
-
 
   const config = {
     type: "line",
@@ -125,20 +115,18 @@ async function graphConfig() {
       })
     },
     options: {
-        responsive: true,
-        title: {
-            display: true,
-            text: 'Chart with Multiline Labels'
-        },
+      responsive: true,
+      title: {
+        display: true,
+        text: "Chart with Multiline Labels"
+      }
     }
   }
   return config
 }
 
-graphConfig(stateDate).then(config => console.log(JSON.stringify(config)))
-
 module.exports = {
+  getGraphData,
   getStats,
-  getAlbums,
-  getTotalWeeks
+  getAlbums
 }
