@@ -1,9 +1,10 @@
 require("dotenv").config()
+global.fetch = require("node-fetch")
 const R = require("ramda")
 const http = require("http")
 const { parse } = require("url")
 const querystring = require("querystring")
-const { getGraphData } = require("./index")
+const { getGraphData } = require("./lastfm")
 
 const { port = 3001 } = process.env
 
